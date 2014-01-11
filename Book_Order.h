@@ -1,5 +1,5 @@
-#ifndef Book_Order_Book_Order_h
-#define Book_Order_Book_Order_h
+#ifndef book_order_book_order_h
+#define book_order_book_order_h
 
 #include <stdio.h>
 #include <string.h>
@@ -11,13 +11,12 @@
 struct customer{
     char *name;
     char *customerID;
-    char *balance;
+    float balance;
     char *address;
     char *state;
     char *zip;
-    struct bookNode *purchasedList; //list of sucessfully purchased books
-    struct bookNode *rejectedList; //list of unsucessfully purchased books
-    
+    struct orderQueue *purchasedList; //list of sucessfully purchased books
+    struct orderQueue *rejectedList; //list of unsucessfully purchased books
 };
 typedef struct customer customer;
 
@@ -25,6 +24,7 @@ typedef struct customer customer;
 struct orderQueue{
     struct orderNode *front;
     struct orderNode *rear;
+    int size;
 };
 typedef struct orderQueue orderQueue;
 
@@ -34,21 +34,36 @@ struct orderNode{
     char *price;
     char *customerID;
     char *category;
+    float remainingBalance;
     struct orderNode *next;
 };
 typedef struct orderNode orderNode;
 
-FILE *database, *order, *categories;
-char *category;
+//FILES for database and Orders args
+FILE *database, *order;
+//array of customers
 customer **customerArr;
+//queue of orders
+orderQueue *queue;
+//mutex lock for threads
 pthread_mutex_t lock;
-int numThreads;
+//pthread_t array index
+int tidIndex;
+float totalRevenue;
 
+//category_threads.c Functions
 char *Concat(char *string, char letter);
-customer *buildCustomer(FILE *fp);
-int getIndex(customer *x);
-int numCategories(FILE *fp);
-unsigned int createThread();
+customer **processDatabase(FILE *database);
+int getIndex(char *customerID);
+int numCategories(char *categories);
 void *processCategory(void *category);
+void output(customer **customerArray);
+void freeCustomers(customer **customerArr);
+
+//queue.c Functions
+orderQueue *initQueue();
+orderQueue *buildQueue(FILE *order);
+orderQueue *insertOrderNode(customer *customer, orderNode *newNode, int list);
+void freeQueue(orderQueue *queue);
 
 #endif
